@@ -7,6 +7,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { Admin } from "./helpers/helperFunction.js";
 import authRouter from "./routes/authRoutes/authRouter.js";
+import adminRouter from "./routes/adminRoutes/adminRouter.js";
 
 const app = express();
 const port = config.PORT;
@@ -50,6 +51,7 @@ app.use((err, req, res, next) => {
 //routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/admin", adminRouter);
 
 //database connection
 dbConnect()
