@@ -2,8 +2,11 @@ import express from "express";
 import config from "./config.js";
 import dbConnect from "./db.js";
 import userRouter from "./routes/userRoutes/userRoutes.js";
-import cors from "cors";
 import morgan from "morgan";
+import cors from "cors";
+import bodyParser from "body-parser";
+import { Admin } from "./helpers/helperFunction.js";
+import authRouter from "./routes/authRoutes/authRouter.js";
 
 const app = express();
 const port = config.PORT;
@@ -45,11 +48,13 @@ app.use((err, req, res, next) => {
 });
 
 //routes
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 
 //database connection
 dbConnect()
   .then(() => {
+    Admin();
     app.listen(port, () => {
       console.log(`server is listening at ${port} port`);
     });
