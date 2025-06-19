@@ -3,17 +3,18 @@ import {
   errorResponse,
   successResponse,
 } from "../../helpers/serverResponse.js";
-import propertymodel from "../../model/propertymodel.js";
+import rentpropertymodel from "../../model/rentpropertymodel.js";
 
-const adminpropertyRouter = Router();
+const adminrentpropertyRouter = Router();
 
-adminpropertyRouter.post("/", getallpropertiesHandler);
-adminpropertyRouter.post("/create", createpropertiesHandler);
-adminpropertyRouter.put("/update", updatepropertiesHandler);
-adminpropertyRouter.delete("/delete", deletepropertiesHandler);
-export default adminpropertyRouter;
+adminrentpropertyRouter.post("/", getallrentpropertyHandler);
+adminrentpropertyRouter.post("/create", createrentpropertyHandler);
+adminrentpropertyRouter.put("/update", updaterentpropertyHandler);
+adminrentpropertyRouter.delete("/delete", deleterentpropertyHandler);
 
-async function getallpropertiesHandler(req, res) {
+export default adminrentpropertyRouter;
+
+async function getallrentpropertyHandler(req, res) {
   try {
     const { pageno = 0, filterBy = {}, sortby = {}, search = "" } = req.body;
 
@@ -62,24 +63,24 @@ async function getallpropertiesHandler(req, res) {
         : { createdAt: -1 }; // Default sorting by most recent
 
     // Fetch total count for pagination
-    const totalCount = await propertymodel.countDocuments(query);
+    const totalCount = await rentpropertymodel.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
 
     // Fetch paginated property
-    const porperty = await propertymodel
+    const rentproperty = await rentpropertymodel
       .find(query)
       .sort(sortBy)
       .skip(skip)
       .limit(limit);
 
-    successResponse(res, "Success", { porperty, totalPages });
+    successResponse(res, "Success", { rentproperty, totalPages });
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
 
-async function createpropertiesHandler(req, res) {
+async function createrentpropertyHandler(req, res) {
   try {
     const {
       propertyname,
@@ -124,15 +125,15 @@ async function createpropertiesHandler(req, res) {
       amenities,
     };
 
-    const property = await propertymodel.create(params);
-    successResponse(res, "property added successfully", property);
+    const rentproperty = await rentpropertymodel.create(params);
+    successResponse(res, "rentproperty added successfully", rentproperty);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
 
-async function updatepropertiesHandler(req, res) {
+async function updaterentpropertyHandler(req, res) {
   try {
     const { _id, ...updatedData } = req.body;
     const options = { new: true };
@@ -151,7 +152,7 @@ async function updatepropertiesHandler(req, res) {
     ) {
       return errorResponse(res, 404, "Some params are missing");
     }
-    const updated = await propertymodel.findByIdAndUpdate(
+    const updated = await rentpropertymodel.findByIdAndUpdate(
       _id,
       updatedData,
       options
@@ -163,13 +164,13 @@ async function updatepropertiesHandler(req, res) {
   }
 }
 
-async function deletepropertiesHandler(req, res) {
+async function deleterentpropertyHandler(req, res) {
   try {
     const { _id } = req.body;
     if (!_id) {
       return errorResponse(res, 400, "some params are missing");
     }
-    const properties = await propertymodel.findOneAndDelete({ _id: _id });
+    const properties = await rentpropertymodel.findOneAndDelete({ _id: _id });
     successResponse(res, "successfully deleted");
   } catch (error) {
     console.log("error", error);
