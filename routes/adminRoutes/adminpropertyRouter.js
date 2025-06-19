@@ -20,7 +20,7 @@ async function getallpropertiesHandler(req, res) {
     const limit = 10;
     const skip = pageno * limit;
 
-    // Base query for contacts
+    // Base query for porperty
     let query = {};
 
     // Apply filters
@@ -35,7 +35,14 @@ async function getallpropertiesHandler(req, res) {
     // Apply search
     if (search.trim()) {
       const searchRegex = new RegExp(search.trim(), "i");
-      const searchFields = ["propertytype", "rooms", "startingprice","bathrooms","location","amenities"];
+      const searchFields = [
+        "propertytype",
+        "rooms",
+        "startingprice",
+        "bathrooms",
+        "location",
+        "amenities",
+      ];
       const searchConditions = searchFields.map((field) => ({
         [field]: { $regex: searchRegex },
       }));
@@ -55,17 +62,17 @@ async function getallpropertiesHandler(req, res) {
         : { createdAt: -1 }; // Default sorting by most recent
 
     // Fetch total count for pagination
-    const totalCount = await contactmodel.countDocuments(query);
+    const totalCount = await propertymodel.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Fetch paginated contacts
-    const contacts = await contactmodel
+    // Fetch paginated property
+    const porperty = await propertymodel
       .find(query)
       .sort(sortBy)
       .skip(skip)
       .limit(limit);
 
-    successResponse(res, "Success", { contacts, totalPages });
+    successResponse(res, "Success", { porperty, totalPages });
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
