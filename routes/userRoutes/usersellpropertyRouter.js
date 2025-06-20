@@ -8,7 +8,7 @@ import sellpropertymodel from "../../model/sellpropertymodel.js";
 const usersellpropertyRouter = Router();
 
 usersellpropertyRouter.post("/", createusersellpropertyHandler);
-
+usersellpropertyRouter.get("/", getallsellpropertyHandler);
 export default usersellpropertyRouter;
 
 async function createusersellpropertyHandler(req, res) {
@@ -61,6 +61,16 @@ async function createusersellpropertyHandler(req, res) {
       description,
     };
     const sellproperty = await sellpropertymodel.create(params);
+    successResponse(res, "successfully", sellproperty);
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function getallsellpropertyHandler(req, res) {
+  try {
+    const sellproperty = await sellpropertymodel.find();
     successResponse(res, "successfully", sellproperty);
   } catch (error) {
     console.log("error", error);

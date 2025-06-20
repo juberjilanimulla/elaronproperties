@@ -26,6 +26,7 @@ const propertySchema = new Schema(
       type: String, 
       default: "",
     },
+    surfaceareasqft: String,
     images: [
       {
         type: String,

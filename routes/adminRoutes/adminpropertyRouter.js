@@ -42,6 +42,7 @@ async function getallpropertiesHandler(req, res) {
         "bathrooms",
         "location",
         "amenities",
+        "surfaceareasqft"
       ];
       const searchConditions = searchFields.map((field) => ({
         [field]: { $regex: searchRegex },
@@ -92,6 +93,7 @@ async function createpropertiesHandler(req, res) {
       location,
       brochureurl,
       features,
+      surfaceareasqft,
       amenities,
     } = req.body;
 
@@ -105,6 +107,7 @@ async function createpropertiesHandler(req, res) {
       !description ||
       !location ||
       !brochureurl ||
+      !surfaceareasqft,
       !features ||
       !amenities
     ) {
@@ -121,6 +124,7 @@ async function createpropertiesHandler(req, res) {
       location,
       brochureurl,
       features,
+      surfaceareasqft,
       amenities,
     };
 
@@ -145,6 +149,7 @@ async function updatepropertiesHandler(req, res) {
       !updatedData.location ||
       !updatedData.amenities ||
       !updatedData.title ||
+      !updatedData.surfaceareasqft ||
       !updatedData.description ||
       !updatedData.features ||
       !updatedData.brochureurl

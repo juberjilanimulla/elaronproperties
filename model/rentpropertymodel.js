@@ -22,6 +22,7 @@ const rentpropertySchema = new Schema(
     location: {
       type: String,
     },
+    surfaceareasqft: String,
     brochureurl: {
       type: String,
       default: "",
