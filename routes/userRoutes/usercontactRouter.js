@@ -5,11 +5,11 @@ import {
 } from "../../helpers/serverResponse.js";
 import usermodel from "../../model/usermodel.js";
 
-const userContactRouter = Router();
+const usercontactRouter = Router();
 
-userContactRouter.post("/create", createcontactHandler);
+usercontactRouter.post("/create", createcontactHandler);
 
-export default userContactRouter;
+export default usercontactRouter;
 
 async function createcontactHandler(req, res) {
   try {
