@@ -6,5 +6,7 @@ const userRouter = Router();
 
 userRouter.use("/contact", usercontactRouter);
 userRouter.use("/sellproperty", usersellpropertyRouter);
+userRouter.use("/property",)
+
 
 export default userRouter;
