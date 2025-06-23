@@ -5,6 +5,7 @@ import userpropertyRouter from "./userpropertyRouter.js";
 import userteamRouter from "./userteamRouter.js";
 import useroffplanRouter from "./useroffplanRouter.js";
 import userrentRouter from "./userrentRouter.js";
+import usernewsRouter from "./usernewsRouter.js";
 
 const userRouter = Router();
 
@@ -14,5 +15,6 @@ userRouter.use("/property", userpropertyRouter);
 userRouter.use("/team", userteamRouter);
 userRouter.use("/offplan", useroffplanRouter);
 userRouter.use("/rent", userrentRouter);
+userRouter.use("/news", usernewsRouter);
 
 export default userRouter;
