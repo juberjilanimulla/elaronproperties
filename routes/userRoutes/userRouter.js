@@ -16,5 +16,5 @@ userRouter.use("/team", userteamRouter);
 userRouter.use("/offplan", useroffplanRouter);
 userRouter.use("/rent", userrentRouter);
 userRouter.use("/news", usernewsRouter);
-
+userRouter.use("/marketoverview",usermarketoverview)
 export default userRouter;

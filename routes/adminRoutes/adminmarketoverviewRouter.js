@@ -116,7 +116,7 @@ async function updatemarketoverviewHandler(req, res) {
     ) {
       return errorResponse(res, 404, "Some params are missing");
     }
-    const updated = await newsmodel.findByIdAndUpdate(
+    const updated = await marketoverviewmodel.findByIdAndUpdate(
       _id,
       updatedData,
       options
