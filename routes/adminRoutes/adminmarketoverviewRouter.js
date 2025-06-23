@@ -75,6 +75,27 @@ async function getallmarketoverviewHandler(req, res) {
 
 async function createmarketoverviewHandler(req, res) {
   try {
+    const { title, subtitle, date, category, sections, ispublished } = req.body;
+    if (
+      !title ||
+      !subtitle ||
+      !date ||
+      !category ||
+      !sections ||
+      !ispublished
+    ) {
+      return errorResponse(res, 400, "some params are missing");
+    }
+    const params = {
+      title,
+      subtitle,
+      date,
+      category,
+      sections,
+      ispublished,
+    };
+    const marketoverview = await marketoverviewmodel.create(params);
+    successResponse(res, "successfully", marketoverview);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
@@ -83,6 +104,24 @@ async function createmarketoverviewHandler(req, res) {
 
 async function updatemarketoverviewHandler(req, res) {
   try {
+    const { _id, ...updatedData } = req.body;
+    const options = { new: true };
+    if (
+      !updatedData.title ||
+      !updatedData.subtitle ||
+      !updatedData.date ||
+      !updatedData.category ||
+      !updatedData.sections ||
+      !updatedData.ispublished
+    ) {
+      return errorResponse(res, 404, "Some params are missing");
+    }
+    const updated = await newsmodel.findByIdAndUpdate(
+      _id,
+      updatedData,
+      options
+    );
+    successResponse(res, "success", updated);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
