@@ -12,4 +12,5 @@ adminRouter.use("/rentproperty", adminrentpropertyRouter);
 adminRouter.use("/offplanproperty", adminoffplanpropertyRouter);
 adminRouter.use("/news", adminnewsRouter);
 adminRouter.use("/team", adminteamRouter);
+adminRouter.use("/marketoverview");
 export default adminRouter;
