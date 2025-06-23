@@ -4,6 +4,7 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import propertymodel from "../../model/propertymodel.js";
+import adminpropertyimages from "./adminuploadpropertyimagesRouter.js";
 
 const adminpropertyRouter = Router();
 
@@ -11,6 +12,7 @@ adminpropertyRouter.post("/", getallpropertiesHandler);
 adminpropertyRouter.post("/create", createpropertiesHandler);
 adminpropertyRouter.put("/update", updatepropertiesHandler);
 adminpropertyRouter.delete("/delete", deletepropertiesHandler);
+adminpropertyRouter.use("/upload", adminpropertyimages);
 export default adminpropertyRouter;
 
 async function getallpropertiesHandler(req, res) {
@@ -42,7 +44,7 @@ async function getallpropertiesHandler(req, res) {
         "bathrooms",
         "location",
         "amenities",
-        "surfaceareasqft"
+        "surfaceareasqft",
       ];
       const searchConditions = searchFields.map((field) => ({
         [field]: { $regex: searchRegex },
@@ -98,18 +100,17 @@ async function createpropertiesHandler(req, res) {
     } = req.body;
 
     if (
-      !propertyname ||
-      !startingprice ||
-      !propertytype ||
-      !rooms ||
-      !bathrooms ||
-      !title ||
-      !description ||
-      !location ||
-      !brochureurl ||
-      !surfaceareasqft,
-      !features ||
-      !amenities
+      (!propertyname ||
+        !startingprice ||
+        !propertytype ||
+        !rooms ||
+        !bathrooms ||
+        !title ||
+        !description ||
+        !location ||
+        !brochureurl ||
+        !surfaceareasqft,
+      !features || !amenities)
     ) {
       return errorResponse(res, 400, "some params are missing");
     }
@@ -181,3 +182,4 @@ async function deletepropertiesHandler(req, res) {
     errorResponse(res, 500, "internal server error");
   }
 }
+

@@ -6,24 +6,24 @@ const propertySchema = new Schema(
       type: String,
     },
     startingprice: {
-      type: String, 
+      type: String,
     },
     propertytype: {
-      type: String, 
+      type: String,
     },
-    rooms: [String], 
-    bathrooms: [String], 
+    rooms: [String],
+    bathrooms: [String],
     title: {
-      type: String, 
+      type: String,
     },
     description: {
-      type: String, 
+      type: String,
     },
     location: {
       type: String,
     },
     brochureurl: {
-      type: String, 
+      type: String,
       default: "",
     },
     surfaceareasqft: String,
@@ -32,7 +32,7 @@ const propertySchema = new Schema(
         type: String,
         default: "",
       },
-    ], 
+    ],
     features: [
       {
         title: String,
