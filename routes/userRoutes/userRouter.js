@@ -3,6 +3,8 @@ import usercontactRouter from "./usercontactRouter.js";
 import usersellpropertyRouter from "./usersellpropertyRouter.js";
 import userpropertyRouter from "./userpropertyRouter.js";
 import userteamRouter from "./userteamRouter.js";
+import useroffplanRouter from "./useroffplanRouter.js";
+import userrentRouter from "./userrentRouter.js";
 
 const userRouter = Router();
 
@@ -10,5 +12,7 @@ userRouter.use("/contact", usercontactRouter);
 userRouter.use("/sellproperty", usersellpropertyRouter);
 userRouter.use("/property", userpropertyRouter);
 userRouter.use("/team", userteamRouter);
+userRouter.use("/offplan", useroffplanRouter);
+userRouter.use("/rent", userrentRouter);
 
 export default userRouter;
