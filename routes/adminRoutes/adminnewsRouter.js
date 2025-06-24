@@ -11,6 +11,7 @@ adminnewsRouter.post("/", getallnewsHandler);
 adminnewsRouter.post("/create", createnewsHandler);
 adminnewsRouter.put("/update", updatenewsHandler);
 adminnewsRouter.delete("/delete", deletenewsHandler);
+adminnewsRouter.post("/ispublished", ispublishedHandler);
 
 export default adminnewsRouter;
 
@@ -22,7 +23,7 @@ async function getallnewsHandler(req, res) {
     const skip = pageno * limit;
 
     // Base query for offplanproperty
-    let query = {};
+    let query = { ispublished: true };
 
     // Apply filters
     if (filterBy) {
@@ -42,7 +43,7 @@ async function getallnewsHandler(req, res) {
       }));
 
       query = {
-        $and: [{ $or: searchConditions }],
+        $and: [query, { $or: searchConditions }],
       };
     }
 
@@ -136,6 +137,30 @@ async function deletenewsHandler(req, res) {
     }
     const news = await newsmodel.findOneAndDelete({ _id: _id });
     successResponse(res, "successfully deleted");
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function ispublishedHandler(req, res) {
+  try {
+    const { _id, ispublished } = req.body;
+    if (!_id) {
+      return errorResponse(res, 400, "some params are missing");
+    }
+    if (typeof ispublished !== "boolean") {
+      return errorResponse(res, 400, "ispublished must to be true or false");
+    }
+    const updatedNews = await newsmodel.findByIdAndUpdate(
+      _id,
+      { ispublished },
+      { new: true }
+    );
+    if (!updatedNews) {
+      return errorResponse(res, 404, "news article not found");
+    }
+    successResponse(res, "published status updated", updatedNews);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
