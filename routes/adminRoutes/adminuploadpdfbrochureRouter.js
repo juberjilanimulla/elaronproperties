@@ -10,21 +10,23 @@ import {
   successResponse,
   errorResponse,
 } from "../../helpers/serverResponse.js";
+import brochurefilemodel from "../../model/brochurefilemodel.js";
 
 dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const adminuploadpdfbrochure = Router();
 
-// AWS Setup
+// AWS S3 Setup
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
 });
 
-// Multer Temp Storage
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, "../../temp");
@@ -45,17 +47,21 @@ const upload = multer({
   },
 }).single("pdf");
 
-// Upload Route
-adminuploadpdfbrochure.post("/", (req, res) => {
+adminuploadpdfbrochure.post("/pdf", (req, res) => {
   upload(req, res, async (err) => {
-    if (err) return errorResponse(res, 400, err.message || "Upload error");
-    if (!req.file) return errorResponse(res, 400, "No file uploaded");
+    if (err) {
+      return errorResponse(res, 400, err.message || "Upload error");
+    }
+
+
+    const file = req.file;
+    if (!file) return errorResponse(res, 400, "No PDF file uploaded");
 
     try {
-      const file = req.file;
       const fileContent = fs.readFileSync(file.path);
       const fileName = `brochures/${Date.now()}-${file.originalname}`;
 
+      // Upload to S3
       const s3Res = await s3
         .upload({
           Bucket: process.env.AWS_S3_BUCKET,
@@ -65,16 +71,17 @@ adminuploadpdfbrochure.post("/", (req, res) => {
         })
         .promise();
 
-      fs.unlinkSync(file.path); // delete temp
+      fs.unlinkSync(file.path); // Clean up temp file
+
+      // Save to DB
+      await brochurefilemodel.create({ s3url: s3Res.Location });
 
       return successResponse(res, "PDF uploaded successfully", {
-        s3URL: s3Res.Location,
+        s3url: s3Res.Location,
       });
     } catch (error) {
       console.error("Upload failed:", error);
-      if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
+
       return errorResponse(res, 500, "Upload failed");
     }
   });
