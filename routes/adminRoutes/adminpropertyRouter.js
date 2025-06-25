@@ -5,6 +5,7 @@ import {
 } from "../../helpers/serverResponse.js";
 import propertymodel from "../../model/propertymodel.js";
 import adminpropertyimages from "./adminuploadpropertyimagesRouter.js";
+import AWS from "aws-sdk";
 
 const adminpropertyRouter = Router();
 
@@ -13,7 +14,10 @@ adminpropertyRouter.post("/create", createpropertiesHandler);
 adminpropertyRouter.put("/update", updatepropertiesHandler);
 adminpropertyRouter.delete("/delete", deletepropertiesHandler);
 adminpropertyRouter.use("/upload", adminpropertyimages);
+adminpropertyRouter.delete("/imagedelete", deleteimagepropertiesHandler);
 export default adminpropertyRouter;
+
+const s3 = new AWS.S3();
 
 async function getallpropertiesHandler(req, res) {
   try {
@@ -173,13 +177,72 @@ async function deletepropertiesHandler(req, res) {
   try {
     const { _id } = req.body;
     if (!_id) {
-      return errorResponse(res, 400, "some params are missing");
+      return errorResponse(res, 400, "Property ID (_id) is required");
     }
-    const properties = await propertymodel.findOneAndDelete({ _id: _id });
-    successResponse(res, "successfully deleted");
+
+    // Find property before deletion (to access images)
+    const property = await propertymodel.findById(_id);
+    if (!property) {
+      return errorResponse(res, 404, "Property not found");
+    }
+
+    // Delete all images from S3
+    const deleteObjects = property.images.map((url) => ({
+      Key: url.split(".amazonaws.com/")[1],
+    }));
+
+    if (deleteObjects.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Delete: {
+            Objects: deleteObjects,
+            Quiet: true,
+          },
+        })
+        .promise();
+    }
+
+    // Delete property from DB
+    await propertymodel.findByIdAndDelete(_id);
+
+    return successResponse(res, "Property and associated images deleted");
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
 
+async function deleteimagepropertiesHandler(req, res) {
+  const { imageurl, propertyid } = req.body;
+  if (!imageurl || !propertyid) {
+    return errorResponse(res, 400, "some params are missing");
+  }
+  const s3Key = imageurl.split(".amazonaws.com/")[1];
+  if (!s3Key) {
+    return errorResponse(res, 400, "invalid s3 url");
+  }
+  try {
+    await s3
+      .deleteObject({ Bucket: process.env.AWS_S3_BUCKET, Key: s3Key })
+      .promise();
+    // 2. Remove from DB
+    const property = await propertymodel.findById(propertyid);
+    if (!property) return errorResponse(res, 404, "Property not found");
+
+    property.images = property.images.filter(
+      (url) =>
+        decodeURIComponent(url.trim()) !== decodeURIComponent(imageurl.trim())
+    );
+
+    await property.save();
+
+    // 3. Refetch updated document to be 100% fresh
+    const updated = await propertymodel.findById(propertyid);
+
+    return successResponse(res, "Image deleted successfully", updated);
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}

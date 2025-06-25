@@ -5,6 +5,8 @@ import adminoffplanpropertyRouter from "./adminoffplanpropertyRouter.js";
 import adminnewsRouter from "./adminnewsRouter.js";
 import adminteamRouter from "./adminteamRouter.js";
 import adminmarketoverviewRouter from "./adminmarketoverviewRouter.js";
+import admincontactRouter from "./admincontactRouter.js";
+import adminbrochureRouter from "./adminbrochureRouter.js";
 
 const adminRouter = Router();
 
@@ -14,4 +16,7 @@ adminRouter.use("/offplanproperty", adminoffplanpropertyRouter);
 adminRouter.use("/news", adminnewsRouter);
 adminRouter.use("/team", adminteamRouter);
 adminRouter.use("/marketoverview", adminmarketoverviewRouter);
+adminRouter.use("/contact", admincontactRouter);
+adminRouter.use("/brochure", adminbrochureRouter);
+
 export default adminRouter;

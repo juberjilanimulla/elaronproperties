@@ -7,6 +7,7 @@ import useroffplanRouter from "./useroffplanRouter.js";
 import userrentRouter from "./userrentRouter.js";
 import usernewsRouter from "./usernewsRouter.js";
 import usermarketoverviewRouter from "./usermarketoverviewRouter.js";
+import userbrochureRouter from "./userbrochureRouter.js";
 
 const userRouter = Router();
 
@@ -18,4 +19,5 @@ userRouter.use("/offplan", useroffplanRouter);
 userRouter.use("/rent", userrentRouter);
 userRouter.use("/news", usernewsRouter);
 userRouter.use("/marketoverview", usermarketoverviewRouter);
+userRouter.use("/brochure", userbrochureRouter);
 export default userRouter;

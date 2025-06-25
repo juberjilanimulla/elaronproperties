@@ -10,7 +10,7 @@ import {
   successResponse,
   errorResponse,
 } from "../../helpers/serverResponse.js";
-import propertymodel from "../../model/propertymodel.js";
+import rentpropertymodel from "../../model/rentpropertymodel.js";
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -45,24 +45,24 @@ const upload = multer({
   },
 }).array("images", 10); // Support multiple files (max 10)
 
-const adminpropertyimages = Router();
+const adminrentpropertyimages = Router();
 
 // MULTI IMAGE UPLOAD
-adminpropertyimages.post("/:id", (req, res) => {
+adminrentpropertyimages.post("/:id", (req, res) => {
   upload(req, res, async (err) => {
     if (err) return errorResponse(res, 400, err.message || "Upload error");
     if (!req.files || req.files.length === 0)
       return errorResponse(res, 400, "No files uploaded");
 
     try {
-      const property = await propertymodel.findById(req.params.id);
-      if (!property) {
+      const rentproperty = await rentpropertymodel.findById(req.params.id);
+      if (!rentproperty) {
         req.files.forEach((file) => fs.unlinkSync(file.path));
-        return errorResponse(res, 404, "Property not found");
+        return errorResponse(res, 404, "rentproperty not found");
       }
 
-      if (!Array.isArray(property.images)) {
-        property.images = [];
+      if (!Array.isArray(rentproperty.images)) {
+        rentproperty.images = [];
       }
 
       for (const file of req.files) {
@@ -70,7 +70,7 @@ adminpropertyimages.post("/:id", (req, res) => {
         const fileName = `${req.params.id}-${Date.now()}${path.extname(
           file.originalname
         )}`;
-        const s3Key = `properties/${fileName}`;
+        const s3Key = `rentproperties/${fileName}`;
 
         const s3Res = await s3
           .upload({
@@ -81,12 +81,12 @@ adminpropertyimages.post("/:id", (req, res) => {
           })
           .promise();
 
-        property.images.push(s3Res.Location); // Add image URL
+        rentproperty.images.push(s3Res.Location); // Add image URL
         fs.unlinkSync(file.path); // Remove temp file
       }
 
-      await property.save();
-      return successResponse(res, "Images uploaded successfully", property);
+      await rentproperty.save();
+      return successResponse(res, "Images uploaded successfully", rentproperty);
     } catch (error) {
       console.error("Upload failed:", error.message);
       req.files.forEach((file) => {
@@ -97,4 +97,4 @@ adminpropertyimages.post("/:id", (req, res) => {
   });
 });
 
-export default adminpropertyimages;
+export default adminrentpropertyimages;

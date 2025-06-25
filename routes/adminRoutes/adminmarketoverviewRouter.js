@@ -11,6 +11,10 @@ adminmarketoverviewRouter.post("/", getallmarketoverviewHandler);
 adminmarketoverviewRouter.post("/create", createmarketoverviewHandler);
 adminmarketoverviewRouter.put("/update", updatemarketoverviewHandler);
 adminmarketoverviewRouter.delete("/delete", deletemarketoverviewHandler);
+adminmarketoverviewRouter.post(
+  "/ispublished",
+  ispublishedmarketoverviewHandler
+);
 
 export default adminmarketoverviewRouter;
 
@@ -138,6 +142,27 @@ async function deletemarketoverviewHandler(req, res) {
       _id: _id,
     });
     successResponse(res, "success");
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function ispublishedmarketoverviewHandler(req, res) {
+  try {
+    const { _id, ispublished } = req.body;
+    if (!_id) {
+      return errorResponse(res, 400, "some params are missing");
+    }
+    if (typeof ispublished !== "boolean") {
+      return errorResponse(res, 400, "ispublished must to be true or false");
+    }
+    const updatedNews = await newsmodel.findByIdAndUpdate(
+      _id,
+      { ispublished },
+      { new: true }
+    );
+    successResponse(res, "success", updatedNews);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");

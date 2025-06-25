@@ -13,6 +13,7 @@ adminnewsRouter.put("/update", updatenewsHandler);
 adminnewsRouter.delete("/delete", deletenewsHandler);
 adminnewsRouter.post("/ispublished", ispublishedHandler);
 
+
 export default adminnewsRouter;
 
 async function getallnewsHandler(req, res) {
@@ -166,3 +167,4 @@ async function ispublishedHandler(req, res) {
     errorResponse(res, 500, "internal server error");
   }
 }
+

@@ -4,9 +4,10 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import rentpropertymodel from "../../model/rentpropertymodel.js";
+import adminrentpropertyimages from "./adminuploadrentpropertyimagesRouter.js";
 
 const adminrentpropertyRouter = Router();
-
+adminrentpropertyRouter.use("/upload", adminrentpropertyimages);
 adminrentpropertyRouter.post("/", getallrentpropertyHandler);
 adminrentpropertyRouter.post("/create", createrentpropertyHandler);
 adminrentpropertyRouter.put("/update", updaterentpropertyHandler);
