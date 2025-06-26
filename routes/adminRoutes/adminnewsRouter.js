@@ -4,6 +4,8 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import newsmodel from "../../model/newsmodel.js";
+import AWS from "aws-sdk";
+import adminnewsimages from "./adminuploadnewsimagesRouter.js";
 
 const adminnewsRouter = Router();
 
@@ -12,9 +14,11 @@ adminnewsRouter.post("/create", createnewsHandler);
 adminnewsRouter.put("/update", updatenewsHandler);
 adminnewsRouter.delete("/delete", deletenewsHandler);
 adminnewsRouter.post("/ispublished", ispublishedHandler);
-
-
+adminnewsRouter.delete("/imagedelete", deleteimagenewsHandler);
+adminnewsRouter.post("/upload", adminnewsimages);
 export default adminnewsRouter;
+
+const s3 = new AWS.S3();
 
 async function getallnewsHandler(req, res) {
   try {
@@ -24,7 +28,7 @@ async function getallnewsHandler(req, res) {
     const skip = pageno * limit;
 
     // Base query for offplanproperty
-    let query = { ispublished: true };
+    let query = { };
 
     // Apply filters
     if (filterBy) {
@@ -44,7 +48,7 @@ async function getallnewsHandler(req, res) {
       }));
 
       query = {
-        $and: [query, { $or: searchConditions }],
+        $and: [ { $or: searchConditions }],
       };
     }
 
@@ -133,11 +137,37 @@ async function updatenewsHandler(req, res) {
 async function deletenewsHandler(req, res) {
   try {
     const { _id } = req.body;
-    if (_id) {
-      return errorResponse(res, 400, "some params are missing");
+    if (!_id) {
+      return errorResponse(res, 400, "news ID (_id) is required");
     }
-    const news = await newsmodel.findOneAndDelete({ _id: _id });
-    successResponse(res, "successfully deleted");
+
+    // Find property before deletion (to access images)
+    const news = await newsmodel.findById(_id);
+    if (!news) {
+      return errorResponse(res, 404, "news not found");
+    }
+
+    // Delete all images from S3
+    const deleteObjects = news.coverimage.map((url) => ({
+      Key: url.split(".amazonaws.com/")[1],
+    }));
+
+    if (deleteObjects.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Delete: {
+            Objects: deleteObjects,
+            Quiet: true,
+          },
+        })
+        .promise();
+    }
+
+    // Delete property from DB
+    await newsmodel.findByIdAndDelete(_id);
+
+    return successResponse(res, "news and associated images deleted");
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
@@ -168,3 +198,36 @@ async function ispublishedHandler(req, res) {
   }
 }
 
+async function deleteimagenewsHandler(req, res) {
+  const { imageurl, newsid } = req.body;
+  if (!imageurl || !newsid) {
+    return errorResponse(res, 400, "some params are missing");
+  }
+  const s3Key = imageurl.split(".amazonaws.com/")[1];
+  if (!s3Key) {
+    return errorResponse(res, 400, "invalid s3 url");
+  }
+  try {
+    await s3
+      .deleteObject({ Bucket: process.env.AWS_S3_BUCKET, Key: s3Key })
+      .promise();
+    // 2. Remove from DB
+    const news = await newsmodel.findById(newsid);
+    if (!news) return errorResponse(res, 404, "rentProperty not found");
+
+    news.coverimage = news.coverimage.filter(
+      (url) =>
+        decodeURIComponent(url.trim()) !== decodeURIComponent(imageurl.trim())
+    );
+
+    await news.save();
+
+    // 3. Refetch updated document to be 100% fresh
+    const updated = await newsmodel.findById(newsid);
+
+    return successResponse(res, "Image deleted successfully", updated);
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}

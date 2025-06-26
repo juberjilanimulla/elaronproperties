@@ -18,7 +18,7 @@ async function getallnewsHandler(req, res) {
     const skip = pageno * limit;
 
     // Base query for offplanproperty
-    let query = {};
+    let query = { ispublished: true };
 
     // Apply filters
     if (filterBy) {
@@ -38,7 +38,7 @@ async function getallnewsHandler(req, res) {
       }));
 
       query = {
-        $and: [{ $or: searchConditions }],
+        $and: [query, { $or: searchConditions }],
       };
     }
 

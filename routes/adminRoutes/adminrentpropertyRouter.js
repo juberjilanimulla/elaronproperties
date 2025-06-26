@@ -5,6 +5,7 @@ import {
 } from "../../helpers/serverResponse.js";
 import rentpropertymodel from "../../model/rentpropertymodel.js";
 import adminrentpropertyimages from "./adminuploadrentpropertyimagesRouter.js";
+import AWS from "aws-sdk";
 
 const adminrentpropertyRouter = Router();
 adminrentpropertyRouter.use("/upload", adminrentpropertyimages);
@@ -12,8 +13,11 @@ adminrentpropertyRouter.post("/", getallrentpropertyHandler);
 adminrentpropertyRouter.post("/create", createrentpropertyHandler);
 adminrentpropertyRouter.put("/update", updaterentpropertyHandler);
 adminrentpropertyRouter.delete("/delete", deleterentpropertyHandler);
+adminrentpropertyRouter.delete("/imagedelete", deleteimagerentpropertyHandler);
 
 export default adminrentpropertyRouter;
+
+const s3 = new AWS.S3();
 
 async function getallrentpropertyHandler(req, res) {
   try {
@@ -174,10 +178,70 @@ async function deleterentpropertyHandler(req, res) {
   try {
     const { _id } = req.body;
     if (!_id) {
-      return errorResponse(res, 400, "some params are missing");
+      return errorResponse(res, 400, "Property ID (_id) is required");
     }
-    const properties = await rentpropertymodel.findOneAndDelete({ _id: _id });
-    successResponse(res, "successfully deleted");
+
+    // Find property before deletion (to access images)
+    const rentproperty = await rentpropertymodel.findById(_id);
+    if (!rentproperty) {
+      return errorResponse(res, 404, "rentproperty not found");
+    }
+
+    // Delete all images from S3
+    const deleteObjects = rentproperty.images.map((url) => ({
+      Key: url.split(".amazonaws.com/")[1],
+    }));
+
+    if (deleteObjects.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Delete: {
+            Objects: deleteObjects,
+            Quiet: true,
+          },
+        })
+        .promise();
+    }
+
+    // Delete property from DB
+    await rentpropertymodel.findByIdAndDelete(_id);
+
+    return successResponse(res, "Property and associated images deleted");
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function deleteimagerentpropertyHandler(req, res) {
+  const { imageurl, rentpropertyid } = req.body;
+  if (!imageurl || !rentpropertyid) {
+    return errorResponse(res, 400, "some params are missing");
+  }
+  const s3Key = imageurl.split(".amazonaws.com/")[1];
+  if (!s3Key) {
+    return errorResponse(res, 400, "invalid s3 url");
+  }
+  try {
+    await s3
+      .deleteObject({ Bucket: process.env.AWS_S3_BUCKET, Key: s3Key })
+      .promise();
+    // 2. Remove from DB
+    const rentproperty = await rentpropertymodel.findById(rentpropertyid);
+    if (!rentproperty) return errorResponse(res, 404, "rentProperty not found");
+
+    rentproperty.images = rentproperty.images.filter(
+      (url) =>
+        decodeURIComponent(url.trim()) !== decodeURIComponent(imageurl.trim())
+    );
+
+    await rentproperty.save();
+
+    // 3. Refetch updated document to be 100% fresh
+    const updated = await rentpropertymodel.findById(rentpropertyid);
+
+    return successResponse(res, "Image deleted successfully", updated);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
