@@ -18,8 +18,8 @@ const newsSchema = new Schema(
       default: "Property Advice",
     },
     coverimage: {
-      type: String,
-      default: "",
+      type: [String], // 👈 Array of URLs
+      default: [],
     },
     sections: [
       {

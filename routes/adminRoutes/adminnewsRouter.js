@@ -15,7 +15,7 @@ adminnewsRouter.put("/update", updatenewsHandler);
 adminnewsRouter.delete("/delete", deletenewsHandler);
 adminnewsRouter.post("/ispublished", ispublishedHandler);
 adminnewsRouter.delete("/imagedelete", deleteimagenewsHandler);
-adminnewsRouter.post("/upload", adminnewsimages);
+adminnewsRouter.use("/imageupload", adminnewsimages);
 export default adminnewsRouter;
 
 const s3 = new AWS.S3();
@@ -28,7 +28,7 @@ async function getallnewsHandler(req, res) {
     const skip = pageno * limit;
 
     // Base query for offplanproperty
-    let query = { };
+    let query = {};
 
     // Apply filters
     if (filterBy) {
@@ -48,7 +48,7 @@ async function getallnewsHandler(req, res) {
       }));
 
       query = {
-        $and: [ { $or: searchConditions }],
+        $and: [{ $or: searchConditions }],
       };
     }
 
@@ -213,6 +213,7 @@ async function deleteimagenewsHandler(req, res) {
       .promise();
     // 2. Remove from DB
     const news = await newsmodel.findById(newsid);
+
     if (!news) return errorResponse(res, 404, "rentProperty not found");
 
     news.coverimage = news.coverimage.filter(
@@ -224,8 +225,8 @@ async function deleteimagenewsHandler(req, res) {
 
     // 3. Refetch updated document to be 100% fresh
     const updated = await newsmodel.findById(newsid);
-
-    return successResponse(res, "Image deleted successfully", updated);
+   
+    return successResponse(res, "Image deleted successfully");
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");

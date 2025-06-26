@@ -10,7 +10,7 @@ import {
   successResponse,
   errorResponse,
 } from "../../helpers/serverResponse.js";
-import newsmodel from "../../model/newsmodel.js";
+import marketoverviewmodel from "../../model/marketoverviewmodel.js";
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -45,22 +45,22 @@ const upload = multer({
   },
 }).array("coverimage", 10); // Support multiple files (max 10)
 
-const adminnewsimages = Router();
+const adminmarketoveriviewimages = Router();
 
 // MULTI IMAGE UPLOAD
-adminnewsimages.post("/:id", (req, res) => {
+adminmarketoveriviewimages.post("/:id", (req, res) => {
   upload(req, res, async (err) => {
     if (err) return errorResponse(res, 400, err.message || "Upload error");
 
     try {
-      const news = await newsmodel.findById(req.params.id);
-      if (!news) {
+      const marketoverview = await marketoverviewmodel.findById(req.params.id);
+      if (!marketoverview) {
         fs.unlinkSync(req.file.path); // remove local file
         return errorResponse(res, 404, "News not found");
       }
 
-      if (!Array.isArray(news.coverimage)) {
-        news.coverimage = [];
+      if (!Array.isArray(marketoverview.coverimage)) {
+        marketoverview.coverimage = [];
       }
 
       for (const file of req.files) {
@@ -68,7 +68,7 @@ adminnewsimages.post("/:id", (req, res) => {
         const fileName = `${req.params.id}-${Date.now()}${path.extname(
           file.originalname
         )}`;
-        const s3Key = `news/${fileName}`;
+        const s3Key = `marketoverview/${fileName}`;
         const s3Res = await s3
           .upload({
             Bucket: process.env.AWS_S3_BUCKET,
@@ -77,11 +77,15 @@ adminnewsimages.post("/:id", (req, res) => {
             ContentType: file.mimetype,
           })
           .promise();
-        news.coverimage.push(s3Res.Location);
+        marketoverview.coverimage.push(s3Res.Location);
         fs.unlinkSync(file.path); // Remove temp file
       }
-      await news.save();
-      return successResponse(res, "Cover image uploaded successfully", news);
+      await marketoverview.save();
+      return successResponse(
+        res,
+        "Cover image uploaded successfully",
+        marketoverview
+      );
     } catch (error) {
       console.log("Upload failed:", error.message);
       return errorResponse(res, 500, "Image upload failed");
@@ -89,4 +93,4 @@ adminnewsimages.post("/:id", (req, res) => {
   });
 });
 
-export default adminnewsimages;
+export default adminmarketoveriviewimages;

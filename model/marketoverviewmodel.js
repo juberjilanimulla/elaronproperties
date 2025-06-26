@@ -18,8 +18,8 @@ const marketoverviewSchema = new Schema(
       default: "Market Overview",
     },
     coverimage: {
-      type: String,
-      default: "",
+      type: [String],
+      default: [],
     },
     sections: [
       {

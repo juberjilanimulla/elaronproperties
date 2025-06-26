@@ -4,6 +4,7 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import marketoverviewmodel from "../../model/marketoverviewmodel.js";
+import adminmarketoveriviewimages from "./adminuploadmarketoverviewRouter.js";
 
 const adminmarketoverviewRouter = Router();
 
@@ -15,6 +16,8 @@ adminmarketoverviewRouter.post(
   "/ispublished",
   ispublishedmarketoverviewHandler
 );
+adminmarketoverviewRouter.use("/upload", adminmarketoveriviewimages);
+adminmarketoverviewRouter.delete("/delete", deleteimagemarketoverviewHandler);
 
 export default adminmarketoverviewRouter;
 
@@ -163,6 +166,14 @@ async function ispublishedmarketoverviewHandler(req, res) {
       { new: true }
     );
     successResponse(res, "success", updatedNews);
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function deleteimagemarketoverviewHandler(req, res) {
+  try {
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
