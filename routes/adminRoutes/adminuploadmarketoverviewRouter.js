@@ -54,6 +54,7 @@ adminmarketoveriviewimages.post("/:id", (req, res) => {
 
     try {
       const marketoverview = await marketoverviewmodel.findById(req.params.id);
+
       if (!marketoverview) {
         fs.unlinkSync(req.file.path); // remove local file
         return errorResponse(res, 404, "News not found");
@@ -62,7 +63,6 @@ adminmarketoveriviewimages.post("/:id", (req, res) => {
       if (!Array.isArray(marketoverview.coverimage)) {
         marketoverview.coverimage = [];
       }
-
       for (const file of req.files) {
         const fileContent = fs.readFileSync(file.path);
         const fileName = `${req.params.id}-${Date.now()}${path.extname(
