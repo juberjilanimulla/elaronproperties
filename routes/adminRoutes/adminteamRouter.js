@@ -4,15 +4,20 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import teammodel from "../../model/teammodel.js";
-
+import adminteamimage from "./amdinuploadteamimageRouter.js";
+import AWS from "aws-sdk";
 const adminteamRouter = Router();
 
 adminteamRouter.post("/", getallteamHandler);
 adminteamRouter.post("/create", createteamHandler);
 adminteamRouter.put("/update", updateteamHandler);
 adminteamRouter.delete("/delete", deleteteamHandler);
+adminteamRouter.use("/upload", adminteamimage);
+adminteamRouter.delete("/imagedelete", deleteimageteamHandler);
 
 export default adminteamRouter;
+
+const s3 = new AWS.S3();
 
 async function getallteamHandler(req, res) {
   try {
@@ -116,10 +121,76 @@ async function deleteteamHandler(req, res) {
   try {
     const { _id } = req.body;
     if (!_id) {
-      return errorResponse(res, 400, "some params are missing");
+      return errorResponse(res, 400, "team ID (_id) is required");
     }
-    const team = await teammodel.findOneAndDelete({ _id: _id });
-    successResponse(res, "successfully deleted");
+
+    // Find property before deletion (to access images)
+    const team = await teammodel.findById(_id);
+    if (!team) {
+      return errorResponse(res, 404, "team not found");
+    }
+
+    // Delete all images from S3
+    const deleteObjects = team.teamimage.map((url) => ({
+      Key: url.split(".amazonaws.com/")[1],
+    }));
+
+    if (deleteObjects.length > 0) {
+      await s3
+        .deleteObjects({
+          Bucket: process.env.AWS_S3_BUCKET,
+          Delete: {
+            Objects: deleteObjects,
+            Quiet: true,
+          },
+        })
+        .promise();
+    }
+
+    // Delete property from DB
+    await teammodel.findByIdAndDelete(_id);
+
+    return successResponse(res, "Property and associated images deleted");
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function deleteimageteamHandler(req, res) {
+  const { imageurl, teamid } = req.body;
+  if (!imageurl || !teamid) {
+    return errorResponse(res, 400, "some params are missing");
+  }
+  const s3Key = imageurl.split(".amazonaws.com/")[1];
+  if (!s3Key) {
+    return errorResponse(res, 400, "invalid s3 url");
+  }
+  try {
+    await s3
+      .deleteObject({ Bucket: process.env.AWS_S3_BUCKET, Key: s3Key })
+      .promise();
+    // 2. Remove from DB
+    const team = await teammodel.findById(teamid);
+
+    if (!team) return errorResponse(res, 404, "team not found");
+    const isMatch =
+      decodeURIComponent(team.teamimage.trim()) ===
+      decodeURIComponent(imageurl.trim());
+
+    if (!isMatch) {
+      return errorResponse(
+        res,
+        400,
+        "Image URL does not match current team image"
+      );
+    }
+    team.teamimage = "";
+    await team.save();
+    // 3. Refetch updated document to be 100% fresh
+    const updated = await teammodel.findById(teamid);
+
+    return successResponse(res, "Image deleted successfully", updated);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");
