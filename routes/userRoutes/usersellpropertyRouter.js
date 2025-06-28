@@ -4,11 +4,13 @@ import {
   successResponse,
 } from "../../helpers/serverResponse.js";
 import sellpropertymodel from "../../model/sellpropertymodel.js";
+import usersellpropertyimage from "./useruploadsellpropertyimagesRouter.js";
 
 const usersellpropertyRouter = Router();
 
 usersellpropertyRouter.post("/", createusersellpropertyHandler);
 usersellpropertyRouter.get("/", getallsellpropertyHandler);
+usersellpropertyRouter.use("/upload", usersellpropertyimage);
 export default usersellpropertyRouter;
 
 async function createusersellpropertyHandler(req, res) {
@@ -27,6 +29,7 @@ async function createusersellpropertyHandler(req, res) {
       email,
       mobile,
       description,
+      images,
     } = req.body;
     if (
       !propertytype ||
@@ -59,6 +62,7 @@ async function createusersellpropertyHandler(req, res) {
       email,
       mobile,
       description,
+      images,
     };
     const sellproperty = await sellpropertymodel.create(params);
     successResponse(res, "successfully", sellproperty);

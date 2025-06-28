@@ -44,7 +44,6 @@ const upload = multer({
   },
 }).single("teamimage");
 
-
 const adminteamimage = Router();
 
 adminteamimage.post("/:id", (req, res) => {
@@ -53,14 +52,14 @@ adminteamimage.post("/:id", (req, res) => {
     if (!req.file) return errorResponse(res, 400, "No file uploaded");
     try {
       const team = await teammodel.findById(req.params.id);
-   
+
       if (!team) {
         fs.unlinkSync(req.file.path);
         return errorResponse(res, 404, "Team member not found");
       }
 
       const fileContent = fs.readFileSync(req.file.path);
-      const fileName = `team/${req.params.id}${path.extname(
+      const fileName = `team/${req.params.id}-${Date.now()}${path.extname(
         req.file.originalname
       )}`;
 

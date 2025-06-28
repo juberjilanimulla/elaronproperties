@@ -17,6 +17,12 @@ const sellpropertySchema = new Schema(
     email: String,
     mobile: String,
     description: String,
+    images: [
+      {
+        type: String,
+        default: "",
+      },
+    ],
   },
   { timestamps: true, versionKey: false }
 );
