@@ -124,8 +124,7 @@ async function updatemarketoverviewHandler(req, res) {
       !updatedData.subtitle ||
       !updatedData.date ||
       !updatedData.category ||
-      !updatedData.sections ||
-      !updatedData.ispublished
+      !updatedData.sections
     ) {
       return errorResponse(res, 404, "Some params are missing");
     }

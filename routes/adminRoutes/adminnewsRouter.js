@@ -117,8 +117,7 @@ async function updatenewsHandler(req, res) {
       !updatedData.subtitle ||
       !updatedData.date ||
       !updatedData.category ||
-      !updatedData.sections ||
-      !updatedData.ispublished
+      !updatedData.sections
     ) {
       return errorResponse(res, 404, "Some params are missing");
     }
@@ -225,7 +224,7 @@ async function deleteimagenewsHandler(req, res) {
 
     // 3. Refetch updated document to be 100% fresh
     const updated = await newsmodel.findById(newsid);
-   
+
     return successResponse(res, "Image deleted successfully");
   } catch (error) {
     console.log("error", error);
